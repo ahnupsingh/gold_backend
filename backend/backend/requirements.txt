@@ -1,0 +1,4 @@
+Django==3.2
+django-log-request-id==1.6.0
+djangorestframework==3.12.4
+psycopg2-binary==2.8.6
