@@ -1,9 +1,12 @@
+from builtins import object
 from rest_framework import status
 from rest_framework.response import Response
 from django.http import JsonResponse
 
+from app.api import api
 
-class ResultBuilder(object):
+
+class ResponseBuilder(object):
     """
     API response builder
     """
@@ -18,16 +21,16 @@ class ResultBuilder(object):
         self.status_code = -1
         return self
 
-    def fail_handle_differently(self):
-        self.status_code = -2
-        return self
-
     def message(self, status_message):
         self.status_message = status_message
         return self
 
     def success(self):
         self.status_code = 1
+        return self
+
+    def set_status_code(self, status_code):
+        self.status_code = status_code
         return self
 
     def ok_200(self):
@@ -70,16 +73,15 @@ class ResultBuilder(object):
         return Response(content, status=self.status)
 
     def get_json(self):
-        response = {
+        status_message = self.status_message
+        if self.status_code != 1:
+            status_message = api.error_messages[self.status_code]
+
+        return {
             'status-code': self.status_code,
-            'status-message': self.status_message,
-            'data': {}
+            'status-message': status_message,
+            'data': self.results,
         }
-
-        if self.results:
-            response.update(dict(data=self.results))
-
-        return response
 
     def get_json_response(self):
         content = self.get_json()
@@ -87,14 +89,7 @@ class ResultBuilder(object):
 
     @staticmethod
     def return_failed_json_response(message):
-        return ResultBuilder().ok_200().fail().message(message).get_json_response()
+        return ResponseBuilder().ok_200().fail().message(message).get_json_response()
 
-    def get_ok200_fail_response(self, message):
-        return self.ok_200().fail().message(message).get_response()
-
-    def get_ok200_success_response(self, message, result=None):
-        response = self.success().ok_200().message(message)
-        if result:
-            response.result_object(result)
-
-        return response.get_response()
+    def get_ok200_fail_response(self, error_code):
+        return self.ok_200().fail().set_status_code(error_code).get_response()
