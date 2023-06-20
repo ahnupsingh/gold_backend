@@ -11,6 +11,8 @@ def validate_account_creation_inputs(phone_number, email, first_name, last_name)
     if not (phone_number and email and first_name and last_name):
         return api.INVALID_INPUT
 
+    return api.STATUS_SUCCESS
+
 
 @api_view(['POST'])
 def create_account(request):
